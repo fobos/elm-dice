@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
     "summary": "Just button with random number generation on it",
-    "repository": "https://github.com/user/project.git",
+    "repository": "https://github.com/fobos/elm-dice.git",
     "license": "MIT",
     "source-directories": [
         "./src"
