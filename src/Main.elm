@@ -1,46 +1,39 @@
 import Graphics.Element exposing (..)
-import Graphics.Input exposing (button)
+import Graphics.Input exposing (..)
+import Time exposing (..)
 import Random.PCG as Random exposing (..)
-
-
--- Random generator
-diceNumGenerator : Generator Int
-diceNumGenerator = int 1 6
-
-throwDice : Seed -> (Int, Seed)
-throwDice seed =
-  generate diceNumGenerator seed
-
--- TODO: генерировать seed на основе уникального значения каждой сессии
-seed0 : Seed
-seed0 = initialSeed2 227852860 1498709020
-
--- Model
-type alias Dice = (Int, Seed)
-
-initDice : Dice
-initDice = (0, seed0)
-
-diceVal : Dice -> String
-diceVal dice =
-  let val = fst dice
-  in if val == 0 then "Throw Dice!!!" else toString val
-
--- Signals
-pressed : Signal.Mailbox Dice
-pressed = Signal.mailbox initDice
-
-
-onClick : Dice -> Signal.Message
-onClick prevDice =
-  let seed = snd prevDice
-      rnd = throwDice seed
-  in Signal.message pressed.address rnd
 
 main : Signal Element
 main =
-  Signal.map drawButton pressed.signal
+  let
+    model = Signal.foldp update init (timestamp  clicks.signal)
+  in
+    Signal.map view model
 
-drawButton : Dice -> Element
-drawButton dice =
-  button (onClick dice) (diceVal dice)
+-- Model
+
+type alias Model = (Int, Seed)
+
+init : Model
+init = (0, initialSeed 0)
+
+-- Model
+
+update : (Time, Clicks) -> Model -> Model
+update (time, click) (_, seed) =
+  case click of
+    Initial ->
+      (0, initialSeed (round time))
+    Click ->
+      generate (int 1 6) seed
+
+-- View
+
+type Clicks = Initial | Click
+
+clicks: Signal.Mailbox Clicks
+clicks = Signal.mailbox Initial
+
+view : Model -> Element
+view (counterVal, _) =
+  button (Signal.message clicks.address Click) (toString counterVal)
