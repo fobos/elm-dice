@@ -39,4 +39,11 @@ update (time, click) (_, maybeSeed) =
 
 view : Model -> Element
 view (counterVal, _) =
-  button (Signal.message clicks.address Click) (toString counterVal)
+  let
+    caption =
+      if counterVal == 0 then
+        "Throw dice!!!"
+      else
+        toString counterVal
+  in
+    button (Signal.message clicks.address Click) caption
