@@ -12,27 +12,30 @@ main =
 
 -- Model
 
-type alias Model = (Int, Seed)
+type alias Model = (Int, Maybe Seed)
 
 init : Model
-init = (0, initialSeed 0)
+init = (0, Nothing)
 
--- Model
-
-update : (Time, Clicks) -> Model -> Model
-update (time, click) (_, seed) =
-  case click of
-    Initial ->
-      (0, initialSeed (round time))
-    Click ->
-      generate (int 1 6) seed
-
--- View
+-- Update
 
 type Clicks = Initial | Click
 
 clicks: Signal.Mailbox Clicks
 clicks = Signal.mailbox Initial
+
+update : (Time, Clicks) -> Model -> Model
+update (time, click) (_, maybeSeed) =
+  let
+    seed =
+      case maybeSeed of
+        Just x -> x
+        Nothing -> initialSeed (round time)
+    (newVal, nextSeed) = generate (int 1 6) seed
+  in
+    (newVal, Just nextSeed)
+
+-- View
 
 view : Model -> Element
 view (counterVal, _) =
