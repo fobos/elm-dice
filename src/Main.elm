@@ -6,7 +6,7 @@ import Random.PCG as Random exposing (..)
 main : Signal Element
 main =
   let
-    model = Signal.foldp update init (timestamp  clicks.signal)
+    model = Signal.foldp update init (timestamp clicks.signal)
   in
     Signal.map view model
 
@@ -19,18 +19,18 @@ init = (0, Nothing)
 
 -- Update
 
-type Clicks = Initial | Click
+type Action = Initial | Click
 
-clicks: Signal.Mailbox Clicks
+clicks: Signal.Mailbox Action
 clicks = Signal.mailbox Initial
 
-update : (Time, Clicks) -> Model -> Model
-update (time, click) (_, maybeSeed) =
+update : (Time, Action) -> Model -> Model
+update (time, action) (_, prevSeed) =
   let
-    seed =
-      case maybeSeed of
-        Just x -> x
-        Nothing -> initialSeed (round time)
+    seed = case action of
+      Initial -> initialSeed (round time)
+      Click -> Maybe.withDefault ( initialSeed (0) ) prevSeed
+
     (newVal, nextSeed) = generate (int 1 6) seed
   in
     (newVal, Just nextSeed)
