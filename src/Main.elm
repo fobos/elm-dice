@@ -2,13 +2,18 @@ import Graphics.Element exposing (..)
 import Graphics.Input exposing (..)
 import Time exposing (..)
 import Random.PCG as Random exposing (..)
+import Task exposing (Task)
 
 main : Signal Element
 main =
   let
-    model = Signal.foldp update init (timestamp  clicks.signal)
+    model = Signal.foldp update init (timestamp clicks.signal)
   in
     Signal.map view model
+
+port initSeed: Task x ()
+port initSeed =
+  Signal.send clicks.address Initial
 
 -- Model
 
@@ -19,18 +24,23 @@ init = (0, Nothing)
 
 -- Update
 
-type Clicks = Initial | Click
+type Action = Initial | Click
 
-clicks: Signal.Mailbox Clicks
+clicks: Signal.Mailbox Action
 clicks = Signal.mailbox Initial
 
-update : (Time, Clicks) -> Model -> Model
-update (time, click) (_, maybeSeed) =
+update : (Time, Action) -> Model -> Model
+update (time, action) (_, prevSeed) =
   let
-    seed =
-      case maybeSeed of
-        Just x -> x
-        Nothing -> initialSeed (round time)
+    initSeed t = initialSeed (round t)
+
+    seed = case action of
+      Initial -> initSeed (time)
+      Click ->
+        case prevSeed of
+          Just x -> x
+          Nothing -> initSeed (time)
+
     (newVal, nextSeed) = generate (int 1 6) seed
   in
     (newVal, Just nextSeed)
@@ -46,4 +56,6 @@ view (counterVal, _) =
       else
         toString counterVal
   in
-    button (Signal.message clicks.address Click) caption
+    flow down
+      [ button ( Signal.message clicks.address Click ) caption ]
+
