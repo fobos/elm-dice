@@ -27,9 +27,14 @@ clicks = Signal.mailbox Initial
 update : (Time, Action) -> Model -> Model
 update (time, action) (_, prevSeed) =
   let
+    initSeed t = initialSeed (round t)
+
     seed = case action of
-      Initial -> initialSeed (round time)
-      Click -> Maybe.withDefault ( initialSeed (0) ) prevSeed
+      Initial -> initSeed (time)
+      Click ->
+        case prevSeed of
+          Just x -> x
+          Nothing -> initSeed (time)
 
     (newVal, nextSeed) = generate (int 1 6) seed
   in
@@ -46,4 +51,8 @@ view (counterVal, _) =
       else
         toString counterVal
   in
-    button (Signal.message clicks.address Click) caption
+    flow down
+      [ button ( Signal.message clicks.address Initial ) "Init seed"
+      , button ( Signal.message clicks.address Click ) caption 
+      ]
+
