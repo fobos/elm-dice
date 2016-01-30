@@ -2,6 +2,7 @@ import Graphics.Element exposing (..)
 import Graphics.Input exposing (..)
 import Time exposing (..)
 import Random.PCG as Random exposing (..)
+import Task exposing (Task)
 
 main : Signal Element
 main =
@@ -9,6 +10,10 @@ main =
     model = Signal.foldp update init (timestamp clicks.signal)
   in
     Signal.map view model
+
+port initSeed: Task x ()
+port initSeed =
+  Signal.send clicks.address Initial
 
 -- Model
 
@@ -52,7 +57,5 @@ view (counterVal, _) =
         toString counterVal
   in
     flow down
-      [ button ( Signal.message clicks.address Initial ) "Init seed"
-      , button ( Signal.message clicks.address Click ) caption 
-      ]
+      [ button ( Signal.message clicks.address Click ) caption ]
 
